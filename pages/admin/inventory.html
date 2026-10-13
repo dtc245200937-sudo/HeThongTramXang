@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Quản lý tồn kho</title>
+
+    <link
+        rel="stylesheet"
+        href="../css/style.css"
+    >
+
+    <style>
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 16px;
+            background: #64748b;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .inventory-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .inventory-card h2 {
+            color: #0f766e;
+            margin-top: 0;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .inventory-table th,
+        .inventory-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .inventory-table th {
+            background: #f1f5f9;
+        }
+
+        .low-stock {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .normal-stock {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .add-btn,
+        .export-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            margin: 3px;
+        }
+
+        .add-btn {
+            background: #0f766e;
+        }
+
+        .add-btn:hover {
+            background: #115e59;
+        }
+
+        .export-btn {
+            background: #dc2626;
+        }
+
+        .export-btn:hover {
+            background: #b91c1c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo">
+        ⛽ Trạm Xăng Thông Minh
+    </div>
+
+    <nav>
+        <a href="../../index.html">Trang chủ</a>
+        <a href="../map.html">Bản đồ</a>
+        <a href="../prices.html">Giá xăng</a>
+        <a href="../costs.html">Chi phí</a>
+        <a href="../news.html">Tin tức</a>
+        <a href="../AI.html">AI</a>
+        <a href="dashboard.html">Dashboard</a>
+    </nav>
+
+</header>
+
+
+<main class="admin-container">
+
+    <a
+        href="dashboard.html"
+        class="back-btn"
+    >
+        ← Quay lại Dashboard
+    </a>
+
+    <h1>📦 Quản lý tồn kho</h1>
+
+    <p>
+        Theo dõi, nhập và xuất nhiên liệu tại các trạm.
+    </p>
+
+    <div id="inventoryList">
+
+        <div class="loading">
+            ⏳ Đang tải dữ liệu...
+        </div>
+
+    </div>
+    <div class="inventory-card">
+
+    <h2>📋 Lịch sử giao dịch kho</h2>
+
+    <div id="transactionList">
+
+        <div class="loading">
+            ⏳ Đang tải lịch sử...
+        </div>
+
+    </div>
+
+</div>
+
+</main>
+
+
+<script>
+
+const API_URL = "";
+
+async function checkAuth() {
+    try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (!res.ok) { window.location.href = "login.html"; return false; }
+        return true;
+    } catch (e) {
+        window.location.href = "login.html";
+        return false;
+    }
+}
+
+async function loadInventory() {
+    const authed = await checkAuth();
+    if (!authed) return;
+
+    const inventoryList = document.getElementById("inventoryList");
+
+    try {
+        const response = await fetch(`${API_URL}/api/inventory`, { credentials: "include" });
+
+        if (!response.ok) {
+            throw new Error(
+                "Không thể lấy dữ liệu tồn kho"
+            );
+        }
+
+        const inventory =
+            await response.json();
+
+        inventoryList.innerHTML = "";
+
+        // Gom dữ liệu theo trạm
+        const stations = {};
+
+        inventory.forEach(item => {
+
+            if (!stations[item.stationName]) {
+
+                stations[item.stationName] = {
+                    name: item.stationName,
+                    location: item.location,
+                    fuels: {}
+                };
+
+            }
+
+            stations[item.stationName]
+                .fuels[item.fuelType] =
+                item.quantity;
+
+        });
+
+
+        // Tạo giao diện từng trạm
+        Object.values(stations).forEach(
+            station => {
+
+                const card =
+                    document.createElement("div");
+
+                card.className =
+                    "inventory-card";
+
+                card.innerHTML = `
+
+                    <h2>
+                        ⛽ ${station.name}
+                    </h2>
+
+                    <p>
+                        📍 ${station.location}
+                    </p>
+
+                    <table
+                        class="inventory-table"
+                    >
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Nhiên liệu
+                                </th>
+
+                                <th>
+                                    Tồn kho
+                                </th>
+
+                                <th>
+                                    Trạng thái
+                                </th>
+
+                                <th>
+                                    Thao tác
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            ${createRow(
+                                station.name,
+                                "RON95",
+                                station.fuels.ron95 || 0
+                            )}
+
+                            ${createRow(
+                                station.name,
+                                "E5",
+                                station.fuels.e5 || 0
+                            )}
+
+                            ${createRow(
+                                station.name,
+                                "Diesel",
+                                station.fuels.diesel || 0
+                            )}
+
+                        </tbody>
+
+                    </table>
+
+                `;
+
+                inventoryList.appendChild(card);
+
+            }
+        );
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        inventoryList.innerHTML = `
+
+            <div class="loading">
+
+                ❌ Không thể kết nối đến server.
+
+                <br><br>
+
+                Hãy kiểm tra server đang chạy.
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+// ===============================
+// TẠO DÒNG TỒN KHO
+// ===============================
+
+function createRow(
+    stationName,
+    fuelName,
+    quantity
+) {
+
+    let status = "";
+    let statusClass = "";
+
+    if (quantity < 3000) {
+
+        status = "⚠️ Sắp hết";
+
+        statusClass =
+            "low-stock";
+
+    }
+    else {
+
+        status = "✅ Bình thường";
+
+        statusClass =
+            "normal-stock";
+
+    }
+
+
+    return `
+
+        <tr>
+
+            <td>
+                ${fuelName}
+            </td>
+
+            <td>
+
+                <strong>
+
+                    ${Number(quantity)
+                        .toLocaleString("vi-VN")}
+
+                    L
+
+                </strong>
+
+            </td>
+
+            <td
+                class="${statusClass}"
+            >
+
+                ${status}
+
+            </td>
+
+            <td>
+
+                <button
+                    class="add-btn"
+                    onclick="
+                        importFuel(
+                            '${stationName}',
+                            '${fuelName}'
+                        )
+                    "
+                >
+
+                    + Nhập
+
+                </button>
+
+
+                <button
+                    class="export-btn"
+                    onclick="
+                        exportFuel(
+                            '${stationName}',
+                            '${fuelName}',
+                            ${quantity}
+                        )
+                    "
+                >
+
+                    − Xuất
+
+                </button>
+
+            </td>
+
+        </tr>
+
+    `;
+
+}
+
+
+// ===============================
+// NHẬP NHIÊN LIỆU
+// ===============================
+
+async function importFuel(
+    stationName,
+    fuelName
+) {
+
+    const quantity =
+        prompt(
+            `Nhập số lít ${fuelName} cho ${stationName}:`
+        );
+
+    if (quantity === null) {
+        return;
+    }
+
+    const liters =
+        Number(quantity);
+
+    if (
+        isNaN(liters) ||
+        liters <= 0
+    ) {
+
+        alert(
+            "Vui lòng nhập số lít hợp lệ!"
+        );
+
+        return;
+    }
+
+
+    const fuelType =
+        convertFuelType(fuelName);
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/inventory/import`,
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+
+                        stationName:
+                            stationName,
+
+                        fuelType:
+                            fuelType,
+
+                        quantity:
+                            liters
+
+                    })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                "❌ " + result.message
+            );
+
+            return;
+        }
+
+
+        alert(
+
+            `✅ Nhập kho thành công!\n\n` +
+
+            `Trạm: ${stationName}\n` +
+
+            `Nhiên liệu: ${fuelName}\n` +
+
+            `Số lượng nhập: ` +
+
+            `${liters.toLocaleString("vi-VN")} L\n\n` +
+
+            `Tồn kho mới: ` +
+
+            `${result.newQuantity
+                .toLocaleString("vi-VN")} L`
+
+        );
+
+
+        loadInventory();
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "❌ Không thể kết nối đến server!"
+        );
+
+    }
+
+}
+
+
+// ===============================
+// XUẤT NHIÊN LIỆU
+// ===============================
+
+async function exportFuel(
+    stationName,
+    fuelName,
+    currentQuantity
+) {
+
+    const quantity =
+        prompt(
+
+            `Xuất ${fuelName} tại ${stationName}\n\n` +
+
+            `Tồn kho hiện tại: ` +
+
+            `${currentQuantity
+                .toLocaleString("vi-VN")} L\n\n` +
+
+            `Nhập số lít muốn xuất:`
+
+        );
+
+
+    if (quantity === null) {
+        return;
+    }
+
+
+    const liters =
+        Number(quantity);
+
+
+    if (
+        isNaN(liters) ||
+        liters <= 0
+    ) {
+
+        alert(
+            "Vui lòng nhập số lít hợp lệ!"
+        );
+
+        return;
+    }
+
+
+    if (liters > currentQuantity) {
+
+        alert(
+
+            "❌ Không thể xuất!\n\n" +
+
+            "Số lượng xuất lớn hơn tồn kho."
+
+        );
+
+        return;
+    }
+
+
+    const fuelType =
+        convertFuelType(fuelName);
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/inventory/export`,
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+
+                        stationName:
+                            stationName,
+
+                        fuelType:
+                            fuelType,
+
+                        quantity:
+                            liters
+
+                    })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(
+                "❌ " + result.message
+            );
+
+            return;
+        }
+
+
+        alert(
+
+            `✅ Xuất nhiên liệu thành công!\n\n` +
+
+            `Trạm: ${stationName}\n` +
+
+            `Nhiên liệu: ${fuelName}\n` +
+
+            `Số lượng xuất: ` +
+
+            `${liters.toLocaleString("vi-VN")} L\n\n` +
+
+            `Tồn kho còn lại: ` +
+
+            `${result.newQuantity
+                .toLocaleString("vi-VN")} L`
+
+        );
+
+
+        loadInventory();
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "❌ Không thể kết nối đến server!"
+        );
+
+    }
+
+}
+
+
+// ===============================
+// ĐỔI TÊN NHIÊN LIỆU
+// ===============================
+
+function convertFuelType(fuelName) {
+
+    if (fuelName === "RON95") {
+        return "ron95";
+    }
+
+    if (fuelName === "E5") {
+        return "e5";
+    }
+
+    if (fuelName === "Diesel") {
+        return "diesel";
+    }
+
+    return "";
+
+}
+
+
+// ===============================
+// KHỞI ĐỘNG
+// ===============================
+
+loadInventory();
+loadTransactions();
+// ===============================
+// LẤY LỊCH SỬ GIAO DỊCH
+// ===============================
+
+async function loadTransactions() {
+
+    const transactionList =
+        document.getElementById("transactionList");
+
+    try {
+
+        const response = await fetch(
+            `${API_URL}/api/inventory/transactions`,
+            { credentials: "include" }
+        );
+
+        if (!response.ok) {
+            throw new Error(
+                "Không thể lấy lịch sử giao dịch"
+            );
+        }
+
+        const transactions =
+            await response.json();
+
+
+        if (transactions.length === 0) {
+
+            transactionList.innerHTML = `
+                <div class="loading">
+                    📭 Chưa có giao dịch nào.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        let html = `
+
+            <table class="inventory-table">
+
+                <thead>
+
+                    <tr>
+                        <th>Trạm</th>
+                        <th>Nhiên liệu</th>
+                        <th>Loại giao dịch</th>
+                        <th>Số lượng</th>
+                        <th>Thời gian</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+        `;
+
+
+        transactions.forEach(transaction => {
+
+            let fuelName = "";
+
+            if (transaction.fuelType === "ron95") {
+                fuelName = "RON95";
+            }
+            else if (transaction.fuelType === "e5") {
+                fuelName = "E5";
+            }
+            else if (transaction.fuelType === "diesel") {
+                fuelName = "Diesel";
+            }
+
+
+            let transactionName = "";
+            let transactionClass = "";
+
+            if (
+                transaction.transactionType === "import"
+            ) {
+
+                transactionName = "🟢 Nhập kho";
+                transactionClass = "normal-stock";
+
+            }
+            else {
+
+                transactionName = "🔴 Xuất kho";
+                transactionClass = "low-stock";
+
+            }
+
+
+            const quantity =
+                Number(transaction.quantity);
+
+
+            const time =
+                new Date(
+                    transaction.createdAt
+                ).toLocaleString("vi-VN");
+
+
+            html += `
+
+                <tr>
+
+                    <td>
+                        ${transaction.stationName}
+                    </td>
+
+                    <td>
+                        ${fuelName}
+                    </td>
+
+                    <td class="${transactionClass}">
+                        ${transactionName}
+                    </td>
+
+                    <td>
+
+                        <strong>
+
+                            ${
+                                transaction.transactionType
+                                === "import"
+                                ? "+"
+                                : "-"
+                            }
+
+                            ${quantity.toLocaleString("vi-VN")}
+                            L
+
+                        </strong>
+
+                    </td>
+
+                    <td>
+                        ${time}
+                    </td>
+
+                </tr>
+
+            `;
+
+        });
+
+
+        html += `
+
+                </tbody>
+
+            </table>
+
+        `;
+
+
+        transactionList.innerHTML = html;
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        transactionList.innerHTML = `
+
+            <div class="loading">
+
+                ❌ Không thể tải lịch sử giao dịch.
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>

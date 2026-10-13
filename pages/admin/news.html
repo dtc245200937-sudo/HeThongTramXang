@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quản lý tin tức</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        .admin-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 25px;
+            padding: 10px 16px;
+            background: #64748b;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .form-box h2 {
+            color: #0f766e;
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .add-btn {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 7px;
+            background: #0f766e;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .add-btn:hover {
+            background: #115e59;
+        }
+
+        .news-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .news-card h3 {
+            margin-top: 0;
+            color: #0f766e;
+        }
+
+        .news-date {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .delete-btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            background: #dc2626;
+            color: white;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+    </style>
+
+</head>
+
+
+<body>
+
+<header>
+
+    <div class="logo">
+        ⛽ Trạm Xăng Thông Minh
+    </div>
+
+    <nav>
+        <a href="../../index.html">Trang chủ</a>
+        <a href="../map.html">Bản đồ</a>
+        <a href="../prices.html">Giá xăng</a>
+        <a href="../costs.html">Chi phí</a>
+        <a href="../news.html">Tin tức</a>
+        <a href="../AI.html">AI</a>
+        <a href="dashboard.html">Dashboard</a>
+    </nav>
+
+</header>
+
+
+<main class="admin-container">
+
+    <a href="dashboard.html" class="back-btn">
+        ← Quay lại Dashboard
+    </a>
+
+
+    <h1>📰 Quản lý tin tức</h1>
+
+    <p>
+        Thêm và quản lý các thông báo, tin tức về nhiên liệu.
+    </p>
+
+
+    <!-- FORM THÊM TIN -->
+
+    <div class="form-box">
+
+        <h2>➕ Thêm tin tức</h2>
+
+        <div class="form-group">
+
+            <label>
+                Tiêu đề
+            </label>
+
+            <input
+                type="text"
+                id="newsTitle"
+                placeholder="Nhập tiêu đề tin tức">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Ngày đăng
+            </label>
+
+            <input
+                type="date"
+                id="newsDate">
+
+        </div>
+
+
+        <div class="form-group">
+
+            <label>
+                Nội dung
+            </label>
+
+            <textarea
+                id="newsContent"
+                placeholder="Nhập nội dung tin tức"></textarea>
+
+        </div>
+
+
+        <button
+            class="add-btn"
+            onclick="addNews()">
+
+            ➕ Thêm tin
+
+        </button>
+
+    </div>
+
+
+    <!-- DANH SÁCH TIN -->
+
+    <h2>📋 Danh sách tin tức</h2>
+
+    <div id="newsList"></div>
+
+</main>
+
+
+<script>
+
+async function checkAuth() {
+    try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (!res.ok) { window.location.href = "login.html"; return false; }
+        return true;
+    } catch (e) {
+        window.location.href = "login.html";
+        return false;
+    }
+}
+
+let newsData = JSON.parse(
+    localStorage.getItem("adminNews")
+) || [
+
+    {
+        title: "Thông báo giá xăng",
+        date: "2026-09-18",
+        content:
+            "Cập nhật thông tin giá nhiên liệu mới nhất."
+    },
+
+    {
+        title: "Khuyến cáo sử dụng nhiên liệu",
+        date: "2026-09-17",
+        content:
+            "Người dùng nên kiểm tra thông tin trước khi đổ nhiên liệu."
+    }
+
+];
+
+if (!localStorage.getItem("adminNews")) {
+    localStorage.setItem("adminNews", JSON.stringify(newsData));
+}
+
+function formatDateDisplay(dateStr) {
+    if (!dateStr) return "";
+    if (dateStr.includes("-")) {
+        const parts = dateStr.split("-");
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+    }
+    return dateStr;
+}
+
+function displayNews() {
+
+    const newsList =
+        document.getElementById("newsList");
+
+    if (!newsList) return;
+
+    newsList.innerHTML = "";
+
+    if (newsData.length === 0) {
+        newsList.innerHTML = "<p>Chưa có tin tức nào.</p>";
+        return;
+    }
+
+    newsData.forEach((news, index) => {
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "news-card";
+
+
+        card.innerHTML = `
+
+            <h3>
+                ${news.title}
+            </h3>
+
+            <div class="news-date">
+                📅 ${formatDateDisplay(news.date)}
+            </div>
+
+            <p>
+                ${news.content}
+            </p>
+
+            <button
+                class="delete-btn"
+                onclick="deleteNews(${index})">
+
+                🗑 Xóa
+
+            </button>
+
+        `;
+
+
+        newsList.appendChild(card);
+
+    });
+
+}
+
+
+
+function addNews() {
+
+    const title =
+        document.getElementById("newsTitle").value.trim();
+
+    const date =
+        document.getElementById("newsDate").value;
+
+    const content =
+        document.getElementById("newsContent").value.trim();
+
+
+    if (!title || !date || !content) {
+
+        alert(
+            "Vui lòng nhập đầy đủ thông tin!"
+        );
+
+        return;
+    }
+
+
+    const newNews = {
+
+        title: title,
+
+        date: date,
+
+        content: content
+
+    };
+
+
+    newsData.unshift(newNews);
+
+
+    localStorage.setItem(
+        "adminNews",
+        JSON.stringify(newsData)
+    );
+
+
+    document.getElementById("newsTitle").value = "";
+
+    document.getElementById("newsDate").value = "";
+
+    document.getElementById("newsContent").value = "";
+
+
+    displayNews();
+
+
+    alert(
+        "✅ Thêm tin tức thành công!"
+    );
+
+}
+
+
+function deleteNews(index) {
+
+    const confirmDelete =
+        confirm(
+            "Bạn có chắc muốn xóa tin này không?"
+        );
+
+
+    if (!confirmDelete) {
+        return;
+    }
+
+
+    newsData.splice(index, 1);
+
+
+    localStorage.setItem(
+        "adminNews",
+        JSON.stringify(newsData)
+    );
+
+
+    displayNews();
+
+}
+
+
+async function initNewsPage() {
+    const authed = await checkAuth();
+    if (authed) displayNews();
+}
+initNewsPage();
+
+</script>
+
+
+</body>
+
+</html>

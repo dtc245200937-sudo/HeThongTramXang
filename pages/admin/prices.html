@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Quản lý giá xăng</title>
+
+    <link rel="stylesheet"
+          href="../css/style.css">
+
+    <style>
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 16px;
+            background: #64748b;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .price-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .price-card h2 {
+            color: #0f766e;
+            margin-top: 0;
+        }
+
+        .price-form {
+            display: grid;
+            grid-template-columns:
+                1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .update-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #0f766e;
+            color: white;
+            cursor: pointer;
+        }
+
+        .update-btn:hover {
+            background: #115e59;
+        }
+
+        .current-price {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .current-price span {
+            margin-right: 25px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+
+        @media (max-width: 700px) {
+
+            .price-form {
+                grid-template-columns: 1fr;
+            }
+
+        }
+        .delete-history-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    background: #dc2626;
+    color: white;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+.delete-history-btn:hover {
+    background: #b91c1c;
+}
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="logo">
+        ⛽ Trạm Xăng Thông Minh
+    </div>
+
+    <nav>
+        <a href="../../index.html">Trang chủ</a>
+        <a href="../map.html">Bản đồ</a>
+        <a href="../prices.html">Giá xăng</a>
+        <a href="../costs.html">Chi phí</a>
+        <a href="../news.html">Tin tức</a>
+        <a href="../AI.html">AI</a>
+        <a href="dashboard.html">Dashboard</a>
+    </nav>
+
+</header>
+
+
+<main class="admin-container">
+
+
+    <a href="dashboard.html"
+       class="back-btn">
+
+        ← Quay lại Dashboard
+
+    </a>
+
+
+    <h1>
+        💰 Quản lý giá nhiên liệu
+    </h1>
+
+    <p>
+        Admin có thể cập nhật giá nhiên liệu
+        của từng trạm.
+    </p>
+
+
+   <div id="priceList">
+
+    <div class="loading">
+        ⏳ Đang tải dữ liệu...
+    </div>
+
+</div>
+
+
+<h2 style="margin-top: 40px;">
+    📜 Lịch sử cập nhật giá
+</h2>
+
+<button
+    onclick="clearPriceHistory()"
+    class="delete-history-btn">
+
+    🗑️ Xóa toàn bộ lịch sử
+
+</button>
+
+
+<table>
+    <thead>
+        <tr>
+            <th>Trạm</th>
+            <th>Nhiên liệu</th>
+            <th>Giá cũ</th>
+            <th>Giá mới</th>
+            <th>Thay đổi</th>
+            <th>Thời gian</th>
+        </tr>
+    </thead>
+
+    <tbody id="priceHistory">
+
+        <tr>
+            <td colspan="5">
+                Đang tải lịch sử...
+            </td>
+        </tr>
+
+    </tbody>
+</table>
+
+
+</main>
+
+
+<script>
+
+
+async function checkAuth() {
+    try {
+        const res = await fetch("/api/auth/me", { credentials: "include" });
+        if (!res.ok) { window.location.href = "login.html"; return false; }
+        return true;
+    } catch (e) {
+        window.location.href = "login.html";
+        return false;
+    }
+}
+
+async function loadPrices() {
+    const authed = await checkAuth();
+    if (!authed) return;
+
+    const priceList =
+        document.getElementById("priceList");
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/stations",
+                { credentials: "include" }
+            );
+
+        const stations =
+            await response.json();
+
+        priceList.innerHTML = "";
+
+
+        stations.forEach(station => {
+
+            const card =
+                document.createElement("div");
+
+            card.className =
+                "price-card";
+
+
+            card.innerHTML = `
+
+                <h2>
+                    ⛽ ${station.name}
+                </h2>
+
+                <p>
+                    📍 ${station.location}
+                </p>
+
+
+                <div class="price-form">
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Loại nhiên liệu
+                        </label>
+
+                        <select
+                            id="fuel-${station.name}">
+                            
+                            <option value="ron95">
+                                RON95
+                            </option>
+
+                            <option value="e5">
+                                E5
+                            </option>
+
+                            <option value="diesel">
+                                Diesel
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Giá mới (đ/L)
+                        </label>
+
+                        <input
+                            type="number"
+                            id="price-${station.name}"
+                            placeholder="Nhập giá">
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Giá hiện tại
+                        </label>
+
+                        <input
+                            type="text"
+                            value="${station.prices.ron95.toLocaleString("vi-VN")} đ/L"
+                            readonly>
+
+                    </div>
+
+
+                    <button
+                        class="update-btn"
+                        onclick="updatePrice('${station.name}')">
+
+                        Cập nhật
+
+                    </button>
+
+
+                </div>
+
+
+                <div class="current-price">
+
+                    <strong>
+                        Giá hiện tại:
+                    </strong>
+
+                    <span>
+                        RON95:
+                        ${station.prices.ron95.toLocaleString("vi-VN")}
+                        đ/L
+                    </span>
+
+                    <span>
+                        E5:
+                        ${station.prices.e5.toLocaleString("vi-VN")}
+                        đ/L
+                    </span>
+
+                    <span>
+                        Diesel:
+                        ${station.prices.diesel.toLocaleString("vi-VN")}
+                        đ/L
+                    </span>
+
+                </div>
+
+            `;
+
+
+            priceList.appendChild(card);
+            
+
+        });
+        
+
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        priceList.innerHTML = `
+
+            <div class="loading">
+
+                ❌ Không thể kết nối đến server.
+
+            </div>
+
+        `;
+
+    }
+
+}
+
+
+
+async function updatePrice(stationName) {
+
+    const fuelType =
+        document.getElementById(
+            `fuel-${stationName}`
+        ).value;
+
+
+    const price =
+        document.getElementById(
+            `price-${stationName}`
+        ).value;
+
+
+    if (!price || Number(price) <= 0) {
+
+        alert(
+            "Vui lòng nhập giá hợp lệ!"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/prices/update",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+
+                    body: JSON.stringify({
+
+                        stationName:
+                            stationName,
+
+                        fuelType:
+                            fuelType,
+
+                        price:
+                            Number(price)
+
+                    })
+
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            alert(result.message);
+
+            return;
+
+        }
+
+
+        alert(
+            "✅ Cập nhật giá thành công!"
+        );
+
+
+        loadPrices();
+
+    }
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "❌ Không thể kết nối đến server!"
+        );
+
+    }
+
+}
+async function loadPriceHistory() {
+    try {
+        const response = await fetch(
+            "/api/prices/history",
+            { credentials: "include" }
+        );
+
+        const history = await response.json();
+
+        const table = document.getElementById("priceHistory");
+
+        table.innerHTML = "";
+
+        if (history.length === 0) {
+            table.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        Chưa có lịch sử cập nhật giá.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        history.forEach(item => {
+
+            const fuelName = {
+                ron95: "RON 95",
+                e5: "E5",
+                diesel: "Dầu Diesel"
+            };
+
+            const row = document.createElement("tr");
+
+            const oldPrice = Number(item.oldPrice);
+const newPrice = Number(item.newPrice);
+
+let changeText = "";
+
+if (newPrice > oldPrice) {
+    changeText = `
+        <span class="price-up">
+            🔴 +${(newPrice - oldPrice).toLocaleString("vi-VN")} đ/L
+        </span>
+    `;
+}
+else if (newPrice < oldPrice) {
+    changeText = `
+        <span class="price-down">
+            🟢 -${(oldPrice - newPrice).toLocaleString("vi-VN")} đ/L
+        </span>
+    `;
+}
+else {
+    changeText = `
+        <span class="price-same">
+            ⚪ Không đổi
+        </span>
+    `;
+}
+
+row.innerHTML = `
+    <td>${item.stationName}</td>
+
+    <td>
+        ${fuelName[item.fuelType] || item.fuelType}
+    </td>
+
+    <td>
+        ${oldPrice.toLocaleString("vi-VN")} đ/L
+    </td>
+
+    <td>
+        ${newPrice.toLocaleString("vi-VN")} đ/L
+    </td>
+
+    <td>
+        ${changeText}
+    </td>
+
+    <td>
+        ${item.updatedAt}
+    </td>
+`;
+
+            table.appendChild(row);
+        });
+
+    } catch (error) {
+        console.error("Lỗi tải lịch sử giá:", error);
+    }
+}
+async function clearPriceHistory() {
+
+    const confirmDelete = confirm(
+        "Bạn có chắc chắn muốn xóa toàn bộ lịch sử cập nhật giá?"
+    );
+
+    if (!confirmDelete) {
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "/api/prices/history",
+            {
+                method: "DELETE",
+                credentials: "include"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            alert(data.message || "Xóa thất bại!");
+            return;
+        }
+
+        alert(data.message);
+
+        loadPriceHistory();
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Không thể kết nối đến server!");
+
+    }
+}
+
+loadPrices();
+loadPriceHistory();
+</script>
+
+
+</body>
+
+</html>

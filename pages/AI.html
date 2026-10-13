@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Trợ lý AI - Trạm Xăng Thông Minh</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+
+        /* =========================
+           TRANG AI
+        ========================= */
+
+        .ai-page {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .ai-title {
+            text-align: center;
+            color: #0f766e;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .ai-description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+
+        /* =========================
+           KHUNG CHAT
+        ========================= */
+
+        .chat-box {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #0f766e;
+            color: white;
+            padding: 18px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .chat-content {
+            height: 450px;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+
+        /* =========================
+           TIN NHẮN
+        ========================= */
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            max-width: 75%;
+            line-height: 1.6;
+        }
+
+        .ai-message {
+            background: #d1fae5;
+            color: #064e3b;
+            margin-right: auto;
+        }
+
+        .user-message {
+            background: #0f766e;
+            color: white;
+            margin-left: auto;
+        }
+
+
+        /* =========================
+           Ô NHẬP
+        ========================= */
+
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .chat-input input:focus {
+            border-color: #0f766e;
+        }
+
+        .chat-input button {
+            padding: 13px 22px;
+            border: none;
+            border-radius: 8px;
+            background: #0f766e;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background: #115e59;
+        }
+
+
+        /* =========================
+           CÂU HỎI GỢI Ý
+        ========================= */
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .suggestion {
+            padding: 10px 15px;
+            background: white;
+            border: 1px solid #0f766e;
+            color: #0f766e;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .suggestion:hover {
+            background: #0f766e;
+            color: white;
+        }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            .chat-content {
+                height: 400px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .chat-input {
+                flex-direction: column;
+            }
+
+            .chat-input button {
+                width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         HEADER
+    ========================= -->
+
+    <header>
+
+        <div class="logo">
+            ⛽ Trạm Xăng Thông Minh
+        </div>
+
+        <nav>
+            <a href="../index.html">Trang chủ</a>
+            <a href="map.html">Bản đồ</a>
+            <a href="prices.html">Giá xăng</a>
+            <a href="costs.html">Chi phí</a>
+            <a href="news.html">Tin tức</a>
+            <a href="AI.html">AI</a>
+            <a href="admin/login.html" class="admin-btn">Admin</a>
+        </nav>
+
+    </header>
+
+
+    <!-- =========================
+         NỘI DUNG AI
+    ========================= -->
+
+    <main class="ai-page">
+
+        <h1 class="ai-title">
+            🤖 Trợ lý AI
+        </h1>
+
+        <p class="ai-description">
+            Trợ lý thông minh hỗ trợ thông tin về trạm xăng,
+            giá nhiên liệu và chi phí.
+        </p>
+
+
+        <!-- =========================
+             KHUNG CHAT
+        ========================= -->
+
+        <div class="chat-box">
+
+            <div class="chat-header">
+                🤖 AI Assistant
+            </div>
+
+
+            <div class="chat-content"
+                 id="chatContent">
+
+                <!-- Tin nhắn chào -->
+
+                <div class="message ai-message">
+
+                    Xin chào! 👋
+
+                    <br><br>
+
+                    Tôi là trợ lý AI của hệ thống
+                    Trạm Xăng Thông Minh.
+
+                    <br><br>
+
+                    Bạn có thể hỏi tôi về:
+
+                    <br>
+                    • Giá xăng
+                    <br>
+                    • Trạm xăng
+                    <br>
+                    • Chi phí nhiên liệu
+                    <br>
+                    • Thông tin hệ thống
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 NHẬP CÂU HỎI
+            ========================= -->
+
+            <div class="chat-input">
+
+                <input
+                    type="text"
+                    id="userInput"
+                    placeholder="Nhập câu hỏi của bạn..."
+                >
+
+                <button onclick="sendMessage()">
+                    Gửi
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================
+             CÂU HỎI GỢI Ý
+        ========================= -->
+
+        <div class="suggestions">
+
+            <button
+                class="suggestion"
+                onclick="askQuestion('Giá xăng hiện tại là bao nhiêu?')">
+
+                💰 Giá xăng
+
+            </button>
+
+
+            <button
+                class="suggestion"
+                onclick="askQuestion('Trạm xăng nào gần tôi?')">
+
+                📍 Trạm xăng gần đây
+
+            </button>
+
+
+            <button
+                class="suggestion"
+                onclick="askQuestion('Làm thế nào để tính chi phí xăng?')">
+
+                🧮 Tính chi phí
+
+            </button>
+
+
+            <button
+                class="suggestion"
+                onclick="askQuestion('Hệ thống có những chức năng gì?')">
+
+                ℹ️ Chức năng hệ thống
+
+            </button>
+
+        </div>
+
+    </main>
+
+
+    <!-- =========================
+         FOOTER
+    ========================= -->
+
+    <footer>
+
+        <p>
+            © 2026 Hệ thống quản lý trạm xăng
+        </p>
+
+    </footer>
+    <script src="../js/ai.js"></script>
+    <script src="../js/ai-widget.js"></script>
+
+</body>
+
+</html>

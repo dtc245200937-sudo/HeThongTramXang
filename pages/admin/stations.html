@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quản lý trạm xăng - Admin</title>
+
+    <link rel="stylesheet" href="../../css/style.css">
+
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            margin-bottom: 25px;
+        }
+
+        .admin-header h1 {
+            margin-bottom: 8px;
+            color: #0f766e;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 16px;
+            background: #64748b;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        .add-btn {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 7px;
+            background: #0f766e;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .add-btn:hover {
+            background: #115e59;
+        }
+
+        .station-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .station-card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .station-card h2 {
+            margin-top: 0;
+            color: #0f766e;
+        }
+
+        .station-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            border: none;
+            padding: 10px 16px;
+            border-radius: 7px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .edit-btn {
+            background: #2563eb;
+        }
+
+        .edit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .delete-btn {
+            background: #dc2626;
+        }
+
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            ⛽ Trạm Xăng Thái Nguyên
+        </div>
+
+        <nav>
+            <a href="../../index.html">Trang chủ</a>
+            <a href="../map.html">Bản đồ</a>
+            <a href="../prices.html">Giá xăng</a>
+            <a href="../costs.html">Chi phí</a>
+            <a href="../news.html">Tin tức</a>
+            <a href="../AI.html">AI</a>
+            <a href="dashboard.html">Dashboard</a>
+        </nav>
+    </header>
+
+
+    <main class="admin-container">
+
+        <a href="dashboard.html" class="back-btn">
+            ← Quay lại Dashboard
+        </a>
+
+        <div class="admin-header">
+            <h1>🏪 Quản lý trạm xăng</h1>
+            <p>Thêm, chỉnh sửa và quản lý thông tin các trạm xăng trong hệ thống</p>
+        </div>
+
+        <!-- FORM THÊM TRẠM -->
+        <div class="form-box">
+            <h2>➕ Thêm trạm xăng mới</h2>
+            <div class="form-group">
+                <label for="stationName">Tên trạm xăng</label>
+                <input type="text" id="stationName" placeholder="Ví dụ: Petrolimex Số 12">
+            </div>
+
+            <div class="form-group">
+                <label for="stationLocation">Địa điểm / Địa chỉ</label>
+                <input type="text" id="stationLocation" placeholder="Ví dụ: Đường Hoàng Văn Thụ, TP. Thái Nguyên">
+            </div>
+
+            <button class="add-btn" onclick="addStation()">
+                ➕ Thêm trạm
+            </button>
+        </div>
+
+        <h2>📋 Danh sách các trạm xăng</h2>
+        <div id="stationList" class="station-grid">
+            <div class="loading">
+                ⏳ Đang tải dữ liệu...
+            </div>
+        </div>
+
+    </main>
+
+
+    <script>
+    let stations = [];
+
+    async function checkAuth() {
+        try {
+            const res = await fetch("/api/auth/me", { credentials: "include" });
+            if (!res.ok) { window.location.href = "login.html"; return false; }
+            return true;
+        } catch (e) {
+            window.location.href = "login.html";
+            return false;
+        }
+    }
+
+    async function loadStations() {
+        const authed = await checkAuth();
+        if (!authed) return;
+
+        try {
+            const response = await fetch("/api/stations", { credentials: "include" });
+            stations = await response.json();
+            displayStations();
+        } catch (error) {
+            console.error(error);
+            alert("❌ Không thể kết nối đến server!");
+        }
+    }
+
+    function displayStations() {
+        const container = document.getElementById("stationList");
+        if (!container) return;
+        container.innerHTML = "";
+
+        if (stations.length === 0) {
+            container.innerHTML = "<p>Chưa có trạm xăng nào.</p>";
+            return;
+        }
+
+        stations.forEach((station, index) => {
+            const card = document.createElement("div");
+            card.className = "station-card";
+
+            card.innerHTML = `
+                <h2>⛽ ${station.name}</h2>
+                <p>📍 <strong>Địa điểm:</strong> ${station.location}</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
+                <h3>💵 Giá nhiên liệu</h3>
+                <p>RON95: <b>${station.prices?.ron95?.toLocaleString("vi-VN") || 0}</b> đ/L</p>
+                <p>E5 RON92: <b>${station.prices?.e5?.toLocaleString("vi-VN") || 0}</b> đ/L</p>
+                <p>Diesel: <b>${station.prices?.diesel?.toLocaleString("vi-VN") || 0}</b> đ/L</p>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 12px 0;">
+                <h3>📦 Tồn kho</h3>
+                <p>RON95: <b>${station.inventory?.ron95?.toLocaleString("vi-VN") || 0}</b> L</p>
+                <p>E5 RON92: <b>${station.inventory?.e5?.toLocaleString("vi-VN") || 0}</b> L</p>
+                <p>Diesel: <b>${station.inventory?.diesel?.toLocaleString("vi-VN") || 0}</b> L</p>
+
+                <div class="station-actions">
+                    <button class="edit-btn" onclick="editStation(${index})">✏️ Sửa</button>
+                    <button class="delete-btn" onclick="deleteStation(${index})">🗑️ Xóa</button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function addStation() {
+        const name = document.getElementById("stationName").value.trim();
+        const location = document.getElementById("stationLocation").value.trim();
+
+        if (!name || !location) {
+            alert("Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/stations/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ name, location })
+            });
+            const result = await response.json();
+            if (!response.ok) { alert(result.message); return; }
+
+            alert("✅ Thêm trạm thành công!");
+            document.getElementById("stationName").value = "";
+            document.getElementById("stationLocation").value = "";
+            loadStations();
+        } catch (error) {
+            console.error(error);
+            alert("❌ Không thể kết nối đến server!");
+        }
+    }
+
+    async function editStation(index) {
+        const station = stations[index];
+        const newName = prompt("Nhập tên trạm mới:", station.name);
+        if (newName === null) return;
+        const newLocation = prompt("Nhập địa điểm mới:", station.location);
+        if (newLocation === null) return;
+
+        if (!newName.trim() || !newLocation.trim()) {
+            alert("Tên trạm và địa điểm không được để trống!");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/stations/update", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    oldName: station.name,
+                    name: newName.trim(),
+                    location: newLocation.trim()
+                })
+            });
+            const result = await response.json();
+            if (!response.ok) { alert(result.message); return; }
+
+            alert("✅ Cập nhật trạm thành công!");
+            loadStations();
+        } catch (error) {
+            console.error(error);
+            alert("❌ Không thể kết nối đến server!");
+        }
+    }
+
+    async function deleteStation(index) {
+        const station = stations[index];
+        const confirmDelete = confirm(`Bạn có chắc muốn xóa "${station.name}" không?`);
+        if (!confirmDelete) return;
+
+        try {
+            const response = await fetch("/api/stations/delete", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({ name: station.name })
+            });
+            const result = await response.json();
+            if (!response.ok) { alert(result.message); return; }
+
+            alert("✅ Xóa trạm thành công!");
+            loadStations();
+        } catch (error) {
+            console.error(error);
+            alert("❌ Không thể kết nối đến server!");
+        }
+    }
+
+    loadStations();
+    </script>
+
+</body>
+</html>

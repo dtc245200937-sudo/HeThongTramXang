@@ -1,0 +1,23 @@
+﻿# Node.js dependencies
+node_modules/
+server/node_modules/
+
+# Environment variables and secrets
+.env
+server/.env
+
+# Git metadata backups
+server/.git.old/
+server/.git.backup/
+
+# Database files - review before publishing
+trambom.db
+server/trambom.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Operating system
+.DS_Store
+Thumbs.db

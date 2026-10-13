@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Tin tức - Hệ thống quản lý trạm xăng</title>
+
+    <!-- CSS chung -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        /* =========================
+           TRANG TIN TỨC
+        ========================= */
+
+        .news-page {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .news-title {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #0f766e;
+            font-size: 32px;
+        }
+
+        .news-description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 35px;
+        }
+        /* =========================
+   TÌM KIẾM TIN TỨC
+========================= */
+
+.news-search {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.news-search input {
+    width: 400px;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    outline: none;
+}
+
+.news-search input:focus {
+    border-color: #0f766e;
+}
+
+.news-search button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    background: #0f766e;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.news-search button:hover {
+    background: #115e59;
+}
+
+        /* Danh sách tin */
+        .news-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        /* Một tin */
+        .news-card {
+            background: white;
+            border-radius: 12px;
+            padding: 22px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            transition: 0.3s;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .news-date {
+            color: #0f766e;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .news-card h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: #222;
+        }
+
+        .news-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .news-button {
+            display: inline-block;
+            padding: 10px 18px;
+            background: #0f766e;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: 0.3s;
+        }
+
+        .news-button:hover {
+            background: #115e59;
+        }
+
+        /* Tin nổi bật */
+        .featured-news {
+            background: #ecfdf5;
+            border-left: 5px solid #0f766e;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 35px;
+        }
+
+        .featured-news h2 {
+            color: #0f766e;
+            margin-bottom: 12px;
+        }
+
+        .featured-news p {
+            color: #555;
+            line-height: 1.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .news-list {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .news-list {
+                grid-template-columns: 1fr;
+            }
+
+            .news-title {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================
+         HEADER
+    ========================= -->
+
+    <header>
+        <div class="logo">
+            ⛽ Trạm Xăng Thông Minh
+        </div>
+
+        <nav>
+            <a href="../index.html">Trang chủ</a>
+            <a href="map.html">Bản đồ</a>
+            <a href="prices.html">Giá xăng</a>
+            <a href="costs.html">Chi phí</a>
+            <a href="news.html">Tin tức</a>
+            <a href="AI.html">AI</a>
+            <a href="admin/login.html" class="admin-btn">Admin</a>
+        </nav>
+    </header>
+
+
+    <!-- =========================
+         NỘI DUNG TIN TỨC
+    ========================= -->
+
+    <main class="news-page">
+
+        <h1 class="news-title">
+            📰 Tin tức & Thông báo
+        </h1>
+
+        <p class="news-description">
+            Cập nhật thông tin về giá xăng dầu và hoạt động của hệ thống trạm xăng
+        </p>
+        <!-- Ô tìm kiếm tin tức -->
+
+<div class="news-search">
+
+    <input
+        type="text"
+        id="searchNews"
+        placeholder="🔍 Tìm kiếm tin tức..."
+    >
+
+    <button onclick="searchNews()">
+        Tìm kiếm
+    </button>
+
+</div>
+
+
+        <!-- Tin nổi bật -->
+
+        <section class="featured-news">
+
+            <h2>
+                📢 Thông báo mới nhất
+            </h2>
+
+            <p>
+                Hệ thống sẽ cập nhật thông tin giá xăng dầu,
+                thông báo điều chỉnh giá và các thông tin liên quan
+                đến hoạt động kinh doanh xăng dầu.
+            </p>
+
+        </section>
+    
+
+        <!-- Danh sách tin -->
+
+        <section class="news-list" id="newsList">
+</section>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         FOOTER
+    ========================= -->
+
+    <footer>
+        <p>
+            © 2026 Hệ thống quản lý trạm xăng
+        </p>
+    </footer>
+
+<script src="../js/news.js"></script>
+<script src="../js/ai.js"></script>
+<script src="../js/ai-widget.js"></script>
+</body>
+</html>

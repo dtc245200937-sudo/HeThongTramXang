@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Đăng nhập Admin - Hệ thống Quản Lý Trạm Xăng</title>
+
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+
+        .login-page {
+            min-height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f7fa;
+            padding: 40px 20px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .login-title {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .login-title h1 {
+            color: #0f766e;
+            margin-bottom: 8px;
+        }
+
+        .login-title p {
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0f766e;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #0f766e;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .login-btn:hover {
+            background: #115e59;
+        }
+
+        .error-message {
+            margin-top: 15px;
+            color: #dc2626;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        .back-home {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            color: #0f766e;
+            text-decoration: none;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+    <!-- HEADER -->
+    <header>
+
+        <div class="logo">
+            ⛽ Trạm Xăng Thái Nguyên
+        </div>
+
+        <nav>
+            <a href="../../index.html">Trang chủ</a>
+            <a href="../map.html">Bản đồ</a>
+            <a href="../prices.html">Giá xăng</a>
+            <a href="../costs.html">Chi phí</a>
+            <a href="../news.html">Tin tức</a>
+            <a href="../AI.html">AI</a>
+            <a href="login.html" class="admin-btn">Admin</a>
+        </nav>
+
+    </header>
+
+
+    <!-- ĐĂNG NHẬP -->
+    <main class="login-page">
+
+        <div class="login-box">
+
+            <div class="login-title">
+
+                <h1>🔐 Quản Trị Hệ Thống</h1>
+
+                <p>
+                    Đăng nhập hệ thống quản lý trạm xăng
+                </p>
+
+            </div>
+
+
+            <form id="loginForm" onsubmit="event.preventDefault(); login();">
+
+                <div class="form-group">
+
+                    <label for="username">
+                        Tên đăng nhập
+                    </label>
+
+                    <input
+                        type="text"
+                        id="username"
+                        placeholder="Nhập tên đăng nhập (ví dụ: admin)"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="password">
+                        Mật khẩu
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Nhập mật khẩu (ví dụ: admin123)"
+                        required
+                    >
+
+                </div>
+
+
+                <button type="submit" class="login-btn">Đăng nhập</button>
+
+
+                <div
+                    id="errorMessage"
+                    class="error-message"
+                >
+                    Sai tên đăng nhập hoặc mật khẩu!
+                </div>
+
+            </form>
+
+            <div style="margin-top: 20px; background: #f0fdfa; padding: 12px; border-radius: 8px; font-size: 13px; color: #0f766e;">
+                <b>Tài khoản mẫu:</b><br>
+                - Admin: <code>admin</code> / <code>admin123</code><br>
+                - Nhân viên: <code>nhanvien</code> / <code>nv123456</code>
+            </div>
+
+
+            <a
+                href="../../index.html"
+                class="back-home"
+            >
+                ← Quay lại trang chủ
+            </a>
+
+        </div>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <p>
+            © 2026 Hệ thống quản lý trạm xăng Thái Nguyên
+        </p>
+
+    </footer>
+
+    <script>
+    async function login() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const errDiv = document.getElementById("errorMessage");
+
+        if (!username || !password) {
+            alert("Vui lòng nhập đầy đủ tài khoản và mật khẩu!");
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                credentials: "include",
+                body: JSON.stringify({ username, password })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                errDiv.style.display = "block";
+                errDiv.textContent = result.message || "Đăng nhập thất bại!";
+                return;
+            }
+
+            errDiv.style.display = "none";
+            localStorage.setItem("currentUser", JSON.stringify(result.user));
+            window.location.href = "dashboard.html";
+
+        } catch (error) {
+            console.error(error);
+            alert("Không kết nối được với server!");
+        }
+    }
+    </script>
+
+</body>
+
+</html>

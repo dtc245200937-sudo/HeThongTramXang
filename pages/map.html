@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bản Đồ Trạm Xăng Thái Nguyên - Tra Cứu & Chỉ Đường Thực Tế</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- System CSS -->
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        /* Modern Glassmorphic Map Page Styles */
+        :root {
+            --primary: #0f766e;
+            --primary-dark: #115e59;
+            --primary-light: #ccfbf1;
+            --accent: #2563eb;
+            --bg-glass: rgba(255, 255, 255, 0.92);
+            --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 20px 30px -10px rgba(0, 0, 0, 0.15);
+            --radius-lg: 16px;
+            --radius-md: 10px;
+        }
+
+        .map-page {
+            padding: 25px 4%;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .map-header {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .map-header-title h1 {
+            font-size: 28px;
+            color: #0f766e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+        }
+
+        .map-header-title p {
+            color: #6b7280;
+            margin-top: 4px;
+            font-size: 15px;
+        }
+
+        .map-layer-switcher {
+            display: flex;
+            background: white;
+            padding: 4px;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e5e7eb;
+            gap: 4px;
+        }
+
+        .layer-btn {
+            border: none;
+            background: transparent;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .layer-btn:hover {
+            color: #0f766e;
+            background: #f0fdf4;
+        }
+
+        .layer-btn.active {
+            background: #0f766e;
+            color: white;
+            box-shadow: 0 2px 8px rgba(15, 118, 110, 0.3);
+        }
+
+        /* Controls Toolbar */
+        .map-toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: white;
+            padding: 14px 18px;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        .map-btn-primary {
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.25);
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .map-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(15, 118, 110, 0.35);
+        }
+
+        .map-btn-secondary {
+            border: 1px solid #cbd5e1;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            background: white;
+            color: #334155;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .map-btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #94a3b8;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 14px 10px 38px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .search-box input:focus {
+            border-color: #0f766e;
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .filter-select {
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            outline: none;
+            background: white;
+            color: #334155;
+            cursor: pointer;
+        }
+
+        /* Map Container Layout */
+        .map-container {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+            position: relative;
+        }
+
+        .map-wrapper {
+            position: relative;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid #e2e8f0;
+        }
+
+        #map {
+            height: 680px;
+            width: 100%;
+            z-index: 1;
+        }
+
+        /* Floating Overlay Controls on Map */
+        .map-float-controls {
+            position: absolute;
+            bottom: 25px;
+            right: 15px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .map-fab {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            color: #1e293b;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .map-fab:hover {
+            transform: scale(1.1);
+            background: #0f766e;
+            color: white;
+        }
+
+        /* Floating Route Info HUD Card */
+        .route-hud-card {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 1000;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            max-width: 340px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .route-hud-card.active {
+            display: block;
+        }
+
+        .route-hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .route-hud-title {
+            font-weight: 700;
+            color: #0f766e;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .route-hud-stats {
+            display: flex;
+            gap: 10px;
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .route-stat-item {
+            flex: 1;
+            background: #f0fdf4;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #bbf7d0;
+            text-align: center;
+        }
+
+        .route-stat-item span {
+            display: block;
+            font-size: 11px;
+            color: #166534;
+        }
+
+        .route-stat-item b {
+            font-size: 15px;
+            color: #15803d;
+        }
+
+        /* Station Sidebar List */
+        .station-sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            max-height: 680px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            color: #0f766e;
+            font-weight: 700;
+        }
+
+        .station-count-badge {
+            background: #ccfbf1;
+            color: #0f766e;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .station-scroll-list {
+            overflow-y: auto;
+            flex: 1;
+            padding-right: 4px;
+        }
+
+        .station-card {
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .station-card:hover {
+            border-color: #0f766e;
+            box-shadow: 0 6px 18px rgba(15, 118, 110, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .station-card.active-selected {
+            border: 2px solid #0f766e;
+            background: #f0fdf4;
+        }
+
+        .station-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .station-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f766e;
+            line-height: 1.3;
+        }
+
+        .brand-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .brand-petrolimex {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #ffedd5;
+        }
+
+        .brand-pvoil {
+            background: #fefce8;
+            color: #a16207;
+            border: 1px solid #fef08a;
+        }
+
+        .brand-other {
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #dcfce7;
+        }
+
+        .station-address {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .price-badge-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-bottom: 12px;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .price-pill {
+            text-align: center;
+        }
+
+        .price-pill label {
+            display: block;
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .price-pill val {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f766e;
+        }
+
+        .station-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-action-sm {
+            flex: 1;
+            padding: 7px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            text-align: center;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .btn-focus {
+            background: #0f766e;
+            color: white;
+        }
+
+        .btn-focus:hover {
+            background: #115e59;
+        }
+
+        .btn-route {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-route:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-gmaps {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+        }
+
+        .btn-gmaps:hover {
+            background: #e2e8f0;
+        }
+
+        .distance-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        /* Marker Custom Styles */
+        .custom-gas-pin {
+            transition: transform 0.2s ease;
+        }
+
+        .custom-gas-pin:hover {
+            transform: scale(1.15);
+            z-index: 9999 !important;
+        }
+
+        .pin-wrapper {
+            background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            border: 2px solid white;
+            position: relative;
+        }
+
+        .pin-wrapper.petrolimex {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        }
+
+        .pin-wrapper.pvoil {
+            background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);
+        }
+
+        .pin-pulse {
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border-radius: 24px;
+            border: 2px solid rgba(15, 118, 110, 0.6);
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            100% { transform: scale(1.25); opacity: 0; }
+        }
+
+        .user-gps-pin {
+            width: 24px;
+            height: 24px;
+            background: #2563eb;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.8);
+            position: relative;
+        }
+
+        .user-gps-pulse {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            width: 38px;
+            height: 38px;
+            background: rgba(37, 99, 235, 0.3);
+            border-radius: 50%;
+            animation: radar-sweep 2s infinite ease-out;
+        }
+
+        @keyframes radar-sweep {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+
+        /* Custom Leaflet Popup Styling */
+        .leaflet-popup-content-wrapper {
+            border-radius: 12px !important;
+            padding: 4px !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 14px !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 992px) {
+            .map-container {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 480px;
+            }
+
+            .station-sidebar {
+                max-height: 500px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">
+            ⛽ Trạm Xăng Thái Nguyên
+        </div>
+        <nav>
+            <a href="../index.html">Trang chủ</a>
+            <a href="map.html" style="color:#0f766e; font-weight:bold;">Bản đồ</a>
+            <a href="prices.html">Giá xăng</a>
+            <a href="costs.html">Chi phí</a>
+            <a href="news.html">Tin tức</a>
+            <a href="AI.html">AI</a>
+            <a href="admin/login.html" class="admin-btn">Admin</a>
+        </nav>
+    </header>
+
+    <!-- MAIN MAP PAGE -->
+    <main class="map-page">
+
+        <!-- HEADER TITLE & LAYER SWITCHER -->
+        <div class="map-header">
+            <div class="map-header-title">
+                <h1>📍 Bản Đồ Trạm Xăng Thông Minh</h1>
+                <p>Tra cứu trạm xăng, đường đi thực tế & chế độ bản đồ vệ tinh siêu nét</p>
+            </div>
+
+            <!-- Tile Layer Switcher Controls -->
+            <div class="map-layer-switcher">
+                <button class="layer-btn active" onclick="switchMapLayer('satellite')" id="btn-layer-satellite">
+                    🌍 Vệ tinh
+                </button>
+                <button class="layer-btn" onclick="switchMapLayer('street')" id="btn-layer-street">
+                    🗺️ Đường phố
+                </button>
+                <button class="layer-btn" onclick="switchMapLayer('dark')" id="btn-layer-dark">
+                    🌙 Ban đêm
+                </button>
+                <button class="layer-btn" onclick="switchMapLayer('topo')" id="btn-layer-topo">
+                    🏔️ Địa hình
+                </button>
+            </div>
+        </div>
+
+        <!-- TOOLBAR & FILTERS -->
+        <div class="map-toolbar">
+            <button class="map-btn-primary" onclick="findNearest()">
+                📍 Tìm cây xăng gần tôi
+            </button>
+
+            <button class="map-btn-secondary" onclick="showAllStations()">
+                🔄 Khôi phục góc nhìn
+            </button>
+
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Tìm theo tên trạm hoặc địa chỉ..." oninput="handleSearch()">
+            </div>
+
+            <select class="filter-select" id="brandFilter" onchange="handleFilter()">
+                <option value="all">Tất cả thương hiệu</option>
+                <option value="petrolimex">Petrolimex</option>
+                <option value="pvoil">PVOIL</option>
+                <option value="other">Thương hiệu khác</option>
+            </select>
+
+            <select class="filter-select" id="sortFilter" onchange="handleSort()">
+                <option value="default">Sắp xếp: Mặc định</option>
+                <option value="distance">Sắp xếp: Khoảng cách gần nhất</option>
+                <option value="ron95">Sắp xếp: Giá RON95 rẻ nhất</option>
+                <option value="name">Sắp xếp: Tên A-Z</option>
+            </select>
+        </div>
+
+        <!-- NEAREST INFOBAR -->
+        <div id="nearestStation"></div>
+
+        <!-- MAP & SIDEBAR GRID -->
+        <div class="map-container">
+
+            <!-- BẢN ĐỒ INTERACTIVE -->
+            <div class="map-wrapper">
+                <div id="map"></div>
+
+                <!-- ROUTE HUD OVERLAY -->
+                <div class="route-hud-card" id="routeHud">
+                    <div class="route-hud-header">
+                        <div class="route-hud-title">
+                            🛣️ Dẫn đường thực tế (OSRM)
+                        </div>
+                        <button onclick="clearRoute()" style="background:none; border:none; color:#ef4444; font-weight:bold; cursor:pointer; font-size:16px;">✕</button>
+                    </div>
+                    <div id="routeHudContent"></div>
+                </div>
+
+                <!-- FLOATING MAP CONTROLS -->
+                <div class="map-float-controls">
+                    <button class="map-fab" onclick="locateUserGPS()" title="Vị trí của tôi">📍</button>
+                    <button class="map-fab" onclick="resetMapBounds()" title="Xem toàn bộ Thái Nguyên">🗺️</button>
+                    <button class="map-fab" onclick="toggleFullScreen()" title="Toàn màn hình">⛶</button>
+                </div>
+            </div>
+
+            <!-- DANH SÁCH TRẠM SIDEBAR -->
+            <div class="station-sidebar">
+                <div class="sidebar-header">
+                    <h2>⛽ Các Trạm Xăng</h2>
+                    <span class="station-count-badge" id="stationCount">0 trạm</span>
+                </div>
+
+                <div class="station-scroll-list" id="stationList"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- JS Bản đồ mới -->
+    <script src="../js/map.js"></script>
+
+    <!-- AI Widget -->
+    <script src="../js/ai-widget.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "he-thong-tram-xang",
+  "version": "1.0.0",
+  "description": "Hệ thống Quản lý & Tra cứu Trạm Xăng Thái Nguyên",
+  "main": "server/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  }
+}

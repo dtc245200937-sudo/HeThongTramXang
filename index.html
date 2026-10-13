@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trạm Xăng Thái Nguyên - Hệ thống Quản Lý & Tra Cứu Thông Minh</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+
+        <div class="logo">
+            ⛽ Trạm Xăng Thái Nguyên
+        </div>
+
+        <nav>
+            <a href="index.html">Trang chủ</a>
+            <a href="pages/map.html">Bản đồ</a>
+            <a href="pages/prices.html">Giá xăng</a>
+            <a href="pages/costs.html">Chi phí</a>
+            <a href="pages/news.html">Tin tức</a>
+            <a href="pages/AI.html">AI</a>
+            <a href="pages/admin/login.html" class="admin-btn">
+                Admin
+            </a>
+        </nav>
+
+    </header>
+
+
+    <!-- HERO -->
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <h1>
+                Tìm trạm xăng gần bạn
+            </h1>
+
+            <p>
+                Tra cứu giá xăng, tìm cây xăng gần nhất,
+                so sánh giá và theo dõi chi phí nhiên liệu.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="pages/map.html" class="btn-primary">
+                    📍 Tìm cây xăng gần nhất
+                </a>
+
+                <a href="pages/prices.html" class="btn-secondary">
+                    ⛽ Xem giá xăng
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- GIÁ XĂNG -->
+    <section class="section">
+
+        <div class="section-title">
+
+            <h2>
+                ⛽ Giá nhiên liệu hôm nay
+            </h2>
+
+            <p>
+                Cập nhật giá nhiên liệu mới nhất trong hệ thống
+            </p>
+
+        </div>
+
+
+        <div class="price-grid">
+
+            <div class="price-card">
+
+                <h3>RON95</h3>
+
+                <p class="price" id="homeRon95">
+                    24.500 đ/L
+                </p>
+
+                <span>
+                    Cập nhật hôm nay
+                </span>
+
+            </div>
+
+
+            <div class="price-card">
+
+                <h3>E5 RON92</h3>
+
+                <p class="price" id="homeE5">
+                    22.500 đ/L
+                </p>
+
+                <span>
+                    Cập nhật hôm nay
+                </span>
+
+            </div>
+
+
+            <div class="price-card">
+
+                <h3>DIESEL</h3>
+
+                <p class="price" id="homeDiesel">
+                    20.500 đ/L
+                </p>
+
+                <span>
+                    Cập nhật hôm nay
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CHỨC NĂNG -->
+    <section class="section">
+
+        <div class="section-title">
+
+            <h2>
+                Chức năng chính
+            </h2>
+
+        </div>
+
+
+        <div class="feature-grid">
+
+            <a href="pages/map.html" class="feature-card">
+
+                <div class="feature-icon">
+                    📍
+                </div>
+
+                <h3>
+                    Bản đồ trạm xăng
+                </h3>
+
+                <p>
+                    Tìm cây xăng gần vị trí của bạn
+                    và xem đường đi.
+                </p>
+
+            </a>
+
+
+            <a href="pages/prices.html" class="feature-card">
+
+                <div class="feature-icon">
+                    ⛽
+                </div>
+
+                <h3>
+                    So sánh giá
+                </h3>
+
+                <p>
+                    So sánh giá nhiên liệu
+                    giữa các trạm.
+                </p>
+
+            </a>
+
+
+            <a href="pages/costs.html" class="feature-card">
+
+                <div class="feature-icon">
+                    💰
+                </div>
+
+                <h3>
+                    Chi phí nhiên liệu
+                </h3>
+
+                <p>
+                    Theo dõi và so sánh
+                    tiền xăng hàng tháng.
+                </p>
+
+            </a>
+
+
+            <a href="pages/news.html" class="feature-card">
+
+                <div class="feature-icon">
+                    📰
+                </div>
+
+                <h3>
+                    Tin xăng dầu
+                </h3>
+
+                <p>
+                    Theo dõi thông báo và
+                    thông tin điều hành.
+                </p>
+
+            </a>
+
+        </div>
+
+    </section>
+
+
+    <!-- AI -->
+    <section class="ai-section">
+
+        <div>
+
+            <h2>
+                🤖 Trợ lý AI
+            </h2>
+
+            <p>
+                Hỏi AI về giá xăng, trạm xăng,
+                chi phí nhiên liệu và thông tin xăng dầu.
+            </p>
+
+            <button onclick="openAI()">
+                Bắt đầu hỏi AI
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <p>
+            © 2026 Trạm Xăng Thái Nguyên
+        </p>
+
+        <p>
+            Hệ thống tra cứu và quản lý trạm xăng
+            tích hợp AI
+        </p>
+
+    </footer>
+
+
+    <script>
+        function openAI() {
+            window.location.href = "pages/AI.html";
+        }
+
+        async function loadHomePrices() {
+            try {
+                const res = await fetch("/api/stations");
+                if (res.ok) {
+                    const stations = await res.json();
+                    if (stations.length > 0) {
+                        const s = stations[0];
+                        if (s.prices.ron95) document.getElementById("homeRon95").textContent = s.prices.ron95.toLocaleString("vi-VN") + " đ/L";
+                        if (s.prices.e5) document.getElementById("homeE5").textContent = s.prices.e5.toLocaleString("vi-VN") + " đ/L";
+                        if (s.prices.diesel) document.getElementById("homeDiesel").textContent = s.prices.diesel.toLocaleString("vi-VN") + " đ/L";
+                    }
+                }
+            } catch (e) {
+                console.warn("Dùng giá mặc định:", e);
+            }
+        }
+        loadHomePrices();
+    </script>
+
+    <script src="js/ai-widget.js"></script>
+</body>
+</html>
